@@ -12,7 +12,7 @@ import time
 import logging
 from db_connection_IG import DatabaseConnection
 
-class video_process:
+class video_process2:
     def __init__(self):
         user_agent = UserAgent(platforms='pc')
         chrome_options = Options()
@@ -33,7 +33,7 @@ class video_process:
         chrome_options.add_argument(f'user-agent={user_agent.random}')
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.maximize_window()
-        self.page_link = 'https://sssinstagram.com/es'
+        self.page_link = 'https://fastdl.app/es'
 
         self.conexion = DatabaseConnection()
         self.conexion.crear_conexion()
@@ -87,7 +87,7 @@ class video_process:
                 if url:
                     self.driver.get(self.page_link)
                     time.sleep(2)
-                    input_enlace = self.driver.find_element(By.CSS_SELECTOR, "input[id='input']")
+                    input_enlace = self.driver.find_element(By.CSS_SELECTOR, "input[id='search-form-input']")
                     input_enlace.send_keys(url)
 
                     button_to_video=WebDriverWait(self.driver, 15).until(
@@ -109,7 +109,7 @@ class video_process:
                     self.driver.execute_script("window.open(arguments[0]);", download_url)
                     
                     # Espera la descarga del archivo y cambia su nombre si es necesario
-                    archivo_descargado = await self.esperar_archivo("videos_descargados", 30)
+                    archivo_descargado = await self.esperar_archivo("videos_descargados", 40)
                     if archivo_descargado:
                         self.cambiar_nombre(archivo_descargado, video_id, publicacion_id, contador)
                         contador += 1  # Incrementa el contador para el próximo video
@@ -147,7 +147,7 @@ class video_process:
             logging.error(f"Error al cerrar la conexión o el navegador: {e}")
 
 async def main():
-    video_extractor = video_process()
+    video_extractor = video_process2()
     await video_extractor.obtener_video()
     video_extractor.cerrar_conexion()
 
