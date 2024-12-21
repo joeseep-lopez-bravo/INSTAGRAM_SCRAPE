@@ -4,9 +4,30 @@
 
 Before you begin, make sure to create the database. You can find the necessary SQL commands in the `instagram_db.sql` file. Execute this file in your PostgreSQL environment to create the required tables.
 
+### Required Files
+Ensure the following configuration files are properly configured:
+- **`topics.conf`**: Specify topics for scraping.
+- **`perfil.conf`**: List of target profiles.
+- **`db_credentials.ini`**: Stores database connection details.
+
+```conf
+[DEFAULT]
+perfiles=['https://www.tiktok.com/@valeria.zevallos0','https://www.tiktok.com/@manuellopez5193']
+```
+```conf
+[DB]
+dbname=instagram_db
+user=postgres
+password=Taicho10
+host=localhost
+port=5432
+```
+
 ### Database Configuration
 
 Once you have created the database, update the connection parameters in the code (`user`, `password`, `port`, and `localhost`) to match your PostgreSQL database settings.
+
+
 
 ### Running the Script
 
@@ -95,5 +116,7 @@ py profile_X.py
 
 py process_image.py
 
-py process_video.py
+py process_video_1.py
+
+py process_video2.py
 ````

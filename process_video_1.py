@@ -48,7 +48,14 @@ class video_process:
             return 0
         with open(self.ultimo_id_video_file, "r") as f:
             return int(f.read().strip())
-
+        
+    def configurar_logger(self):
+        # Configuración básica del logger
+        logging.basicConfig(filename='Logs_Scraper_VIDEO_1_Instagram.log',  # Archivo donde se guardarán los logs
+                            level=logging.INFO,     # Nivel de registro, en este caso errores
+                            format='%(asctime)s - %(levelname)s - %(message)s',  # Formato del log
+                            datefmt='%Y-%m-%d %H:%M:%S')  # Formato de la fecha y hora  
+        
     def guardar_ultimo_id_video(self, ultimo_id_video):
         """Guardar el último ID procesado en el archivo."""
         with open(self.ultimo_id_video_file, "w") as f:
@@ -82,6 +89,7 @@ class video_process:
 
     async def obtener_video(self):
         try:
+            self.configurar_logger()
             ultimo_id_video_procesado = self.leer_ultimo_id_video()
             for url, video_id, publicacion_id in self.generador_enlaces():
                 if url:
@@ -90,12 +98,12 @@ class video_process:
                     input_enlace = self.driver.find_element(By.CSS_SELECTOR, "input[id='input']")
                     input_enlace.send_keys(url)
 
-                    button_to_video=WebDriverWait(self.driver, 15).until(
+                    button_to_video=WebDriverWait(self.driver, 25).until(
                             EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='submit']"))
                         )
                     button_to_video.click()
                     time.sleep(2)
-                    button_to_get=WebDriverWait(self.driver, 15).until(
+                    button_to_get=WebDriverWait(self.driver, 25).until(
                             EC.presence_of_element_located((By.CSS_SELECTOR, "a.button.button--filled.button__download"))
                         )
                     contador = 1
@@ -109,17 +117,17 @@ class video_process:
                     self.driver.execute_script("window.open(arguments[0]);", download_url)
                     
                     # Espera la descarga del archivo y cambia su nombre si es necesario
-                    archivo_descargado = await self.esperar_archivo("videos_descargados", 30)
+                    archivo_descargado = await self.esperar_archivo("videos_descargados", 50)
                     if archivo_descargado:
                         self.cambiar_nombre(archivo_descargado, video_id, publicacion_id, contador)
                         contador += 1  # Incrementa el contador para el próximo video
                         ultimo_id_video_procesado = video_id  # Actualiza el último ID procesado
                     else:
-                        print("No se encontró el archivo después del tiempo de espera.")
+                        logging.info("No se encontró el archivo después del tiempo de espera.")
                     time.sleep(5)
 
                 else:
-                    print("No se pudo obtener el enlace.")
+                    logging.info("No se pudo obtener el enlace.")
             self.guardar_ultimo_id_video(ultimo_id_video_procesado)  # Guarda el último ID procesado
         except Exception as e:
             logging.error(f"Error al procesar los videos: {e}")
@@ -136,20 +144,21 @@ class video_process:
             nuevo_archivo = os.path.join(download_dir, nuevo_nombre)
         
         os.rename(os.path.join(download_dir, archivo_descargado), nuevo_archivo)
-        print(f"Video descargado y renombrado a: {nuevo_nombre}")
+        logging.info(f"Video descargado y renombrado a: {nuevo_nombre}")
 
     def cerrar_conexion(self):
         try:
             self.conexion.connection.close()
             self.driver.quit()
-            print("Conexión cerrada y navegador cerrado.")
+            logging.info("Conexión cerrada y navegador cerrado.")
         except Exception as e:
             logging.error(f"Error al cerrar la conexión o el navegador: {e}")
 
 async def main():
-    video_extractor = video_process()
-    await video_extractor.obtener_video()
-    video_extractor.cerrar_conexion()
+        video_extractor = video_process()
+        await video_extractor.obtener_video()
+        video_extractor.cerrar_conexion()
+    
 
 if __name__ == "__main__":
     asyncio.run(main())

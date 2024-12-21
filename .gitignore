@@ -9,5 +9,7 @@ ultimo_id.txt
 ultimo_id_video.txt
 Logs_Scraper_Busqueda_Instagram.log
 Logs_Scraper_Perfiles_Instagram.log
-errores_perfiles_fb.log
+Logs_Scraper_VIDEO_2_Instagram.log
+Logs_Scraper_VIDEO_1_Instagram.log
+Logs_Scraper_Main_Instagram.log
 credentials.conf

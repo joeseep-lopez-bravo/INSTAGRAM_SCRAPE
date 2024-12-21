@@ -48,7 +48,13 @@ class video_process2:
             return 0
         with open(self.ultimo_id_video_file, "r") as f:
             return int(f.read().strip())
-
+    
+    def configurar_logger(self):
+        # Configuración básica del logger
+        logging.basicConfig(filename='Logs_Scraper_VIDEO_2_Instagram.log',  # Archivo donde se guardarán los logs
+                            level=logging.INFO,     # Nivel de registro, en este caso errores
+                            format='%(asctime)s - %(levelname)s - %(message)s',  # Formato del log
+                            datefmt='%Y-%m-%d %H:%M:%S')  # Formato de la fecha y hora  
     def guardar_ultimo_id_video(self, ultimo_id_video):
         """Guardar el último ID procesado en el archivo."""
         with open(self.ultimo_id_video_file, "w") as f:
@@ -67,6 +73,13 @@ class video_process2:
         except Exception as e:
             logging.error(f"Algo está pasando al generar enlaces: {e}")
 
+    def configurar_logger(self):
+        # Configuración básica del logger
+        logging.basicConfig(filename='Logs_Scraper_VIDEO_1_Instagram.log',  # Archivo donde se guardarán los logs
+                            level=logging.INFO,     # Nivel de registro, en este caso errores
+                            format='%(asctime)s - %(levelname)s - %(message)s',  # Formato del log
+                            datefmt='%Y-%m-%d %H:%M:%S')  # Formato de la fecha y hora  
+
     async def esperar_archivo(self, nombre_carpeta, tiempo_espera):
         tiempo_transcurrido = 0
         archivos_antes = set(os.listdir(nombre_carpeta))
@@ -82,6 +95,7 @@ class video_process2:
 
     async def obtener_video(self):
         try:
+            self.configurar_logger()
             ultimo_id_video_procesado = self.leer_ultimo_id_video()
             for url, video_id, publicacion_id in self.generador_enlaces():
                 if url:
@@ -115,11 +129,11 @@ class video_process2:
                         contador += 1  # Incrementa el contador para el próximo video
                         ultimo_id_video_procesado = video_id  # Actualiza el último ID procesado
                     else:
-                        print("No se encontró el archivo después del tiempo de espera.")
+                        logging.info("No se encontró el archivo después del tiempo de espera.")
                     time.sleep(5)
 
                 else:
-                    print("No se pudo obtener el enlace.")
+                    logging.info("No se pudo obtener el enlace.")
             self.guardar_ultimo_id_video(ultimo_id_video_procesado)  # Guarda el último ID procesado
         except Exception as e:
             logging.error(f"Error al procesar los videos: {e}")
@@ -136,13 +150,13 @@ class video_process2:
             nuevo_archivo = os.path.join(download_dir, nuevo_nombre)
         
         os.rename(os.path.join(download_dir, archivo_descargado), nuevo_archivo)
-        print(f"Video descargado y renombrado a: {nuevo_nombre}")
+        logging.info(f"Video descargado y renombrado a: {nuevo_nombre}")
 
     def cerrar_conexion(self):
         try:
             self.conexion.connection.close()
             self.driver.quit()
-            print("Conexión cerrada y navegador cerrado.")
+            logging.info("Conexión cerrada y navegador cerrado.")
         except Exception as e:
             logging.error(f"Error al cerrar la conexión o el navegador: {e}")
 

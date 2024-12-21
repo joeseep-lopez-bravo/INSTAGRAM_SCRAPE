@@ -40,6 +40,7 @@ class Scraper_Ig():
                     "div.x1qjc9v5.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.x1lliihq.xdt5ytf.x2lah0s.x1a7h2tk.x14miiyz.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x1n2onr6.x11njtxf.xph46j.x9i3mqj.xcghwft.x1bzgcud.xgczaz5.x1rzo0p5.x1guec7k",
                     "div.x1qjc9v5.x972fbf.xcfux6l.x1qhh985.xm0m39n.x9f619.x1lliihq.xdt5ytf.x2lah0s.xrbpyxo.x1a7h2tk.x14miiyz.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x1n2onr6.x11njtxf.x1bfs520.xph46j.x9i3mqj.xcghwft.x1bzgcud.xhdunbi"
                     ]
+        self.selectors_close_modal =['div.x160vmok.x10l6tqk.x1eu8d0j.x1vjfegm > div[role="button"]','button[data-e2e="browse-close"]']
         self.conexion = DatabaseConnection()
         self.conexion.crear_conexion()  
     def _get_credentials(self):
@@ -53,6 +54,28 @@ class Scraper_Ig():
                 password = self.config.get('DEFAULT', f'passwordkey{num}')
                 credentials.append((email, password))
         return credentials
+    def random_time(self,min_seconds, max_seconds):
+        time.sleep(random.uniform(min_seconds, max_seconds))
+    def insert_text(self,text,input_element):
+        try:
+            for char in text:
+                input_element.send_keys(char)
+                self.random_time(0.05,0.25)  
+        except Exception as e:
+             logging.error(f"Error en ingresar texto con dealy  {e}")    
+    def post_relacionado(self,driver,topic,j):
+        try:
+            post_contenido= WebDriverWait(driver, 15).until(
+                        EC.visibility_of_element_located((By.CSS_SELECTOR, "div.x78zum5.xdt5ytf.x67bb7w.x1n2onr6.xvbhtw8.x5yr21d.x168nmei.x1yr5g0i.xrt01vj.xo71vjh")))
+            post_contenido = post_contenido.text   
+            #logging.info(f"post contenido total:  {post_contenido}")
+            topic = topic.replace('#', '')
+            if topic not in post_contenido:
+                    j += 1;
+                    logging.info(f"Contador {j} publicaciones sin el contenido del topic {topic} ")
+            return j 
+        except Exception as e:
+            logging.error(f"Error en obterner la relacionde posts {e}")   
     def login(self):
         max_attempts = len(self.credentials)
         attempt = 0
@@ -70,38 +93,43 @@ class Scraper_Ig():
                 time.sleep(1)
                 target_url = 'https://www.instagram.com/accounts/login/'
                 self.driver.get(target_url)
-                time.sleep(2)
-
-                # Introducir email
-                email_text_in_input = WebDriverWait(self.driver, 15).until(
-                    EC.visibility_of_element_located((By.CSS_SELECTOR, "div._ab32:nth-of-type(1) label._aa48 > span"))
-                ).text
-                if "correo electrónico" in email_text_in_input.lower():
-                    email_input = WebDriverWait(self.driver, 15).until(
-                        EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='username']"))
-                    )
-                    email_input.send_keys(email)
-
+                self.random_time(0.5,2)
+                try:
+                    # Introducir email
+                    email_text_in_input = WebDriverWait(self.driver, 15).until(
+                        EC.visibility_of_element_located((By.CSS_SELECTOR, "div.xdj266r.x1m39q7l.xzueoph.x540dpk:nth-of-type(1) label._aa48> span"))
+                    ).text
+                    if "correo electrónico" in email_text_in_input.lower():
+                        email_input = WebDriverWait(self.driver, 15).until(
+                            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='username']"))
+                        )
+                        self.insert_text(email,email_input)
+                except Exception as e:
+                     logging.error(f"Error al ubicar input de email") 
+                try:
                 # Introducir contraseña
-                password_text_in_input = WebDriverWait(self.driver, 15).until(
-                    EC.visibility_of_element_located((By.CSS_SELECTOR, "div._ab32:nth-of-type(2) label._aa48 > span"))
-                ).text
-                time.sleep(1)
-                if "contraseña" in password_text_in_input.lower():
-                    password_input = WebDriverWait(self.driver, 15).until(
-                        EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='password']"))
-                    )
-                    password_input.send_keys(password)
+                    password_text_in_input = WebDriverWait(self.driver, 15).until(
+                        EC.visibility_of_element_located((By.CSS_SELECTOR, "div.xdj266r.x1m39q7l.xzueoph.x540dpk:nth-of-type(2) label._aa48> span"))
+                    ).text
+                    time.sleep(1)
+                    if "contraseña" in password_text_in_input.lower():
+                        password_input = WebDriverWait(self.driver, 15).until(
+                            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[name='password']"))
+                        )
+                        
+                        self.insert_text(password,password_input)
+                except Exception as e:
+                    logging.error(f"Error al ubicar input de email")    
 
                 # Click en el botón de inicio de sesión
                 login_button = self.driver.find_element(By.CSS_SELECTOR, "button[class=' _acan _acap _acas _aj1- _ap30']")
                 login_button.click()
-                time.sleep(3)
+                self.random_time(1,3)
 
                 # Verificar errores de inicio de sesión
                 try:
                     error_message = WebDriverWait(self.driver, 8).until(
-                        EC.visibility_of_element_located((By.CSS_SELECTOR, "span div._ab2z"))
+                        EC.visibility_of_element_located((By.CSS_SELECTOR, "form >span >div"))
                     ).text
                     if "La contraseña no es correcta. Compruébala." in error_message:
                         logging.warning("Credenciales incorrectas.")
@@ -134,7 +162,7 @@ class Scraper_Ig():
                             datefmt='%Y-%m-%d %H:%M:%S')  # Formato de la fecha y hora  
     def obtener_comentario(self,driver):
         try:
-                time.sleep(2)
+                self.random_time(0.5,2)
                 feed_coments = driver.find_element(By.CSS_SELECTOR, "ul._a9z6._a9za >div> div> div.x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1")
                 return feed_coments.find_elements(By.CSS_SELECTOR, "div.x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.x1yztbdb.x1uhb9sk.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1")
             
@@ -143,9 +171,10 @@ class Scraper_Ig():
         except Exception as e:
                 logging.error(f"Unexpected error in obtener_posts: {e}" )
         return []
+      
     def obtener_imagen(self,driver):
         try:
-                time.sleep(2)
+                self.random_time(0.5,2)
                 feed_pictures = driver.find_element(By.CSS_SELECTOR, "div.x1lliihq.x1n2onr6 ul._acay")
                 return feed_pictures.find_elements(By.CSS_SELECTOR, "li._acaz")
             
@@ -337,7 +366,7 @@ class Scraper_Ig():
                 try: 
                     button_to_next_img= driver.find_element(By.CSS_SELECTOR,"div.x1lliihq.x1n2onr6 div button[aria-label='Siguiente']")
                     button_to_next_img.click()
-                    time.sleep(2) 
+                    self.random_time(0.5,2)
                 except:
                     logging.info("no hay mas inagenes") 
     def scroll_hasta_el_final_post(self,driver,min_scroll,max_scroll,min_s,max_s):
@@ -349,7 +378,7 @@ class Scraper_Ig():
         time.sleep(random.uniform(min_s, max_s))  # Randomize delay to mimic human behavior       
     def obtener_posts(self,driver):
         try:
-            time.sleep(2)
+            self.random_time(1.5,2)
             feed_div = driver.find_element(By.CSS_SELECTOR, "main > div > div:nth-of-type(2)> div")
             return feed_div.find_elements(By.CSS_SELECTOR, "div.x9f619.xjbqb8w.x1lliihq.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.x1n2onr6.x1plvlek.xryxfnj.x1c4vz4f.x2lah0s.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1")
           
@@ -358,21 +387,25 @@ class Scraper_Ig():
         except Exception as e:
             logging.error(f"Unexpected error in obtener_posts: {e}" )
         return []
-    def obtener_enlaces_busqueda(self,driver):
+    def obtener_enlaces_busqueda(self, driver):
         try:
-            time.sleep(2)
+            self.random_time(1.5, 2)
             feed_div = driver.find_element(By.CSS_SELECTOR, "div.x78zum5.xdt5ytf.x5yr21d >div>div.x9f619.x78zum5.xdt5ytf.x1iyjqo2.x6ikm8r.x1odjw0f.xh8yej3.xocp1fn")
-            return feed_div.find_elements(By.CSS_SELECTOR, "a[role='link']")
-           
+            enlaces = feed_div.find_elements(By.CSS_SELECTOR, "a[role='link']")
+            if not enlaces:
+                logging.warning("No se encontraron enlaces en 'feed_div'.")
+                print("imprimiendo error",enlaces)
+            return enlaces
         except NoSuchElementException as e:
-            logging.error(f"Error: Could not locate the 'feed_div' or 'subelelementos' elements. : {e}")
+            logging.error(f"Error: No se pudo localizar 'feed_div' o sus elementos. : {e}")
         except Exception as e:
-            logging.error(f"Unexpected error in obtener_posts: {e}" )
+            logging.error(f"Error inesperado en obtener_enlaces_busqueda: {e}")
         return []
-    def extraer_data(self,driver):
+    def extraer_data(self,driver,topic):
         try:
             elementos_vistos = set()
             event =True  
+            j=0
             contador_repeticiones = 0  # Contador para verificar repeticiones
             longitud_anterior = -1  # Inicializamos en -1 para que sea diferente de la primera longitud
             try:
@@ -431,6 +464,28 @@ class Scraper_Ig():
                                                     href_value.click() 
                                                except Exception as e :
                                                     logging.info(f"Error en abrir los posts {e}")
+                                               j = self.post_relacionado(driver, topic,j)
+                                    
+                                               if j > 3:
+                                                
+                                                    logging.info("Se encontraton 2 publicaciones sin el tema a buscar")                                    
+                                                    try:
+                                                        for selector in self.selectors_close_modal :
+                                                            try:
+                                                                close_modal = WebDriverWait(driver, 20).until(
+                                                                    EC.visibility_of_element_located((By.CSS_SELECTOR, selector))
+                                                                )
+                                                                if close_modal:  # Validar explícitamente que el modal existe
+                                                                    close_modal.click()
+                                                                    logging.info(f"Modal cerrado correctamente con el selector: {selector}.")
+                                                                    break  # Salimos del bucle después de cerrar un modal.
+                                                            except Exception as e:
+                                                                logging.debug(f"No se encontró o no se pudo cerrar el modal con el selector: {selector}.")
+                                                    except Exception as e:
+                                                        logging.error(f"Error al cerrar el modal: {e}")
+                                                    finally:
+                                                        event = False  # Detener el bucle while
+                                                        break  
                                                try:
                                                     likes= WebDriverWait(driver, 10).until(
                                                             EC.presence_of_element_located((By.CSS_SELECTOR, "span> a >span > span"))
@@ -590,20 +645,47 @@ class Scraper_Ig():
                     search_icon.click()
                 except Exception as e:
                     logging.info(f"Error en dar click: {e}")
-
+                tipo='TEMA DE BUSQUEDA'
+                try:
+                    with self.conexion.connection.cursor() as cursor:
+                            consulta_insercion = """INSERT INTO busqueda (busqueda,typo)
+                                                    VALUES (%s,%s)"""
+                            cursor.execute(consulta_insercion, (topic,tipo ))
+                            #logging.info("El id publiacion es resultaod none: ", publicacion_id)
+                            self.conexion.connection.commit()
+                            logging.info(f"Busqueda insertada con éxito.")  
+                except psycopg2.Error as e:
+                            logging.error(f"Error en la base de datos con la Busqueda {e}")
+                except Exception as e:
+                            logging.error(f"algo esta mal con la insercion de la Busqueda ")    
                 try:
                     input_topic = self.driver.find_element(By.CSS_SELECTOR, "input[aria-label='Buscar entrada']")
                     input_topic.clear()
-                    input_topic.send_keys(topic)  # Asignar el tema actual al campo de búsqueda
+                    self.insert_text(topic,input_topic)
                     input_topic.send_keys(Keys.RETURN)
-                    # Obtener enlaces de búsqueda como URLs
-                    enlaces = [enlace.get_attribute('href') for enlace in self.obtener_enlaces_busqueda(self.driver)]
+                    enlaces_busqueda = self.obtener_enlaces_busqueda(self.driver)
+
+                    if enlaces_busqueda is None:
+                        logging.warning(f"La función obtener_enlaces_busqueda retornó None para el tema: {topic}")
+                        #input_topic = self.driver.find_element(By.CSS_SELECTOR, "input[aria-label='Buscar entrada']")
+                        search_icon.click()
+                        self.random_time(0.3,1)
+                        continue  # Pasamos al siguiente tema si hay un problema en obtener los enlaces
+
+                    if not enlaces_busqueda:
+                        logging.warning(f"No se encontraron enlaces para el tema: {topic}")
+                        #input_topic = self.driver.find_element(By.CSS_SELECTOR, "input[aria-label='Buscar entrada']")
+                        search_icon.click()
+                        self.random_time(0.3,1)
+                        continue  # Pasamos al siguiente tema si no hay enlaces
                     
+                    enlaces = [enlace.get_attribute('href') for enlace in enlaces_busqueda]
+
                     for url in enlaces:
                         try:
                             self.driver.get(url)  # Navegar directamente al enlace
-                            for dato in self.extraer_data(self.driver):
-                                logging.info('siguiente post:')
+                            for dato in self.extraer_data(self.driver, topic):
+                                logging.info('Siguiente post:')
                             logging.info(f"Terminando de extraer enlace: {url}")
                         except Exception as e:
                             logging.error(f"Error al procesar el enlace {url}: {e}")
